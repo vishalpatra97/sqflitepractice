@@ -3,6 +3,7 @@ import 'package:day_night_switcher/day_night_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflitepractice/provider/sqlProvider.dart';
+import 'package:sqflitepractice/remote_config/remote_config.dart';
 import 'package:sqflitepractice/theme/theme_service.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -29,12 +30,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-
+  bool isShow = true;
   //
   @override
   void initState() {
     provider = widget.prov;
     widget.prov.getItems();
+    getRemotConfig();
     super.initState();
   }
 
@@ -52,6 +54,11 @@ class _MyHomePageState extends State<MyHomePage> {
     //   _journals = data;
     //   _isLoading = false;
     // });
+  }
+  //
+  getRemotConfig() async {
+    isShow = await FirebaseRemoteConfigClass().initializeConfig();
+    setState(() {});
   }
 
   _addItem() =>
@@ -135,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 String themeName = isDarkMode ? 'dark' : 'light';
 
                 return DayNightSwitcherIcon(
-                    isDarkModeEnabled: isDarkMode,
+                    isDarkModeEnabled: !isDarkMode,
                     onStateChanged: (bool darkMode) async {
                       var service = await ThemeService.instance
                         ..save(darkMode ? 'light' : 'dark');
@@ -145,7 +152,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           .changeTheme(theme: theme, isReversed: darkMode);
                     });
               },
-            )
+            ),
+            const SizedBox(width: 20)
           ],
         ),
         body: ListView.builder(
@@ -186,11 +194,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showForm(null),
-          tooltip: 'Increment',
-          child: const Icon(Icons.add),
-        ), // This trailing comma makes auto-formatting nicer for build methods.
+        floatingActionButton: isShow
+            ? FloatingActionButton(
+                onPressed: () => _showForm(null),
+                tooltip: 'Increment',
+                child: const Icon(Icons.add),
+              )
+            : null, // This trailing comma makes auto-formatting nicer for build methods.
       ),
     );
   }
